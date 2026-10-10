@@ -53,7 +53,8 @@ function exportTeamImage(t){
  for(let i=0;i<4;i++){if(tanks[i])teams[i][0]={n:tanks[i],role:"タンク"};if(heals[i])teams[i][1]={n:heals[i],role:"ヒーラー"};for(let j=0;j<3;j++){const n=dps[i*3+j];if(n)teams[i][j+2]={n,role:"DPS"};}}
  const extras=[...tanks.slice(4).map(n=>({n,role:"タンク"})),...heals.slice(4).map(n=>({n,role:"ヒーラー"})),...dps.slice(12).map(n=>({n,role:"DPS"})),...other.map(n=>({n,role:roleOf(n)||"未設定"}))];
  for(const member of extras){let placed=false;for(let i=3;i>=0&&!placed;i--)for(let j=4;j>=0;j--)if(!teams[i][j]){teams[i][j]=member;placed=true;break;}}
- for(let i=0;i<4;i++)for(let j=0;j<5;j++)if(!teams[i][j])teams[i][j]={n:null,role:j===0?"タンク":j===1?"ヒーラー":"DPS"};
+ const roleOrder={"タンク":0,"ヒーラー":1,"DPS":2};
+ for(let i=0;i<4;i++){const filled=teams[i].filter(Boolean).sort((a,b)=>(roleOrder[a.role]??3)-(roleOrder[b.role]??3));teams[i]=[...filled,...Array.from({length:5-filled.length},()=>({n:null,role:""}))];}
  const W=1040,pad=44,gapX=22,gapY=28,cw=(W-pad*2-gapX)/2,ch=82,step=ch+7,top=112,header=18;
  const teamHeight=i=>header+teams[i].length*step+12;
  const firstH=Math.max(teamHeight(0),teamHeight(1)),secondH=Math.max(teamHeight(2),teamHeight(3));
