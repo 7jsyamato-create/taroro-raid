@@ -49,19 +49,18 @@ function sortTeam(t){const order={"タンク":0,"ヒーラー":1,"DPS":2,"":3};c
 $("sort1").onclick=()=>sortTeam("pt1");$("sort2").onclick=()=>sortTeam("pt2");$("sortall").onclick=()=>{sortTeam("pt1");sortTeam("pt2");$("status").textContent="両PTを タンク → ヒーラー → DPS の順に並べました。"};
 function exportTeamImage(t){
  const src=st[t].filter(Boolean),tanks=src.filter(n=>roleOf(n)==="タンク"),heals=src.filter(n=>roleOf(n)==="ヒーラー"),dps=src.filter(n=>roleOf(n)==="DPS"),other=src.filter(n=>!["タンク","ヒーラー","DPS"].includes(roleOf(n)));
- const teams=Array.from({length:4},()=>[]);
- for(let i=0;i<4;i++){teams[i].push({n:tanks[i]||null,role:"タンク"},{n:heals[i]||null,role:"ヒーラー"});for(let j=0;j<3;j++)teams[i].push({n:dps[i*3+j]||null,role:"DPS"});}
- for(const n of tanks.slice(4))teams[3].push({n,role:"タンク"});
- for(const n of heals.slice(4))teams[3].push({n,role:"ヒーラー"});
- for(const n of dps.slice(12))teams[3].push({n,role:"DPS"});
- for(const n of other)teams[3].push({n,role:roleOf(n)||"未設定"});
+ const teams=Array.from({length:4},()=>Array(5).fill(null));
+ for(let i=0;i<4;i++){if(tanks[i])teams[i][0]={n:tanks[i],role:"タンク"};if(heals[i])teams[i][1]={n:heals[i],role:"ヒーラー"};for(let j=0;j<3;j++){const n=dps[i*3+j];if(n)teams[i][j+2]={n,role:"DPS"};}}
+ const extras=[...tanks.slice(4).map(n=>({n,role:"タンク"})),...heals.slice(4).map(n=>({n,role:"ヒーラー"})),...dps.slice(12).map(n=>({n,role:"DPS"})),...other.map(n=>({n,role:roleOf(n)||"未設定"}))];
+ for(const member of extras){let placed=false;for(let i=3;i>=0&&!placed;i--)for(let j=4;j>=0;j--)if(!teams[i][j]){teams[i][j]=member;placed=true;break;}}
+ for(let i=0;i<4;i++)for(let j=0;j<5;j++)if(!teams[i][j])teams[i][j]={n:null,role:j===0?"タンク":j===1?"ヒーラー":"DPS"};
  const W=1040,pad=44,gapX=22,gapY=28,cw=(W-pad*2-gapX)/2,ch=82,step=ch+7,top=112,header=18;
  const teamHeight=i=>header+teams[i].length*step+12;
  const firstH=Math.max(teamHeight(0),teamHeight(1)),secondH=Math.max(teamHeight(2),teamHeight(3));
  const rowY=[top,top+firstH+gapY],H=rowY[1]+secondH+pad;
  let cv=document.createElement("canvas");cv.width=W;cv.height=H;let x=cv.getContext("2d");x.fillStyle="#f4f6fb";x.fillRect(0,0,W,H);
  x.fillStyle="#252b3b";x.font="700 38px system-ui,'Noto Sans JP',sans-serif";x.fillText("TARORO  "+(t==="pt1"?"PT1":"PT2"),pad,55);
- x.font="600 17px system-ui,'Noto Sans JP',sans-serif";x.fillStyle="#778096";x.fillText("4チーム編成　｜　基本：タンク1・ヒーラー1・DPS×3（超過分はTEAM 4）",pad,84);
+ x.font="600 17px system-ui,'Noto Sans JP',sans-serif";x.fillStyle="#778096";x.fillText("4チーム編成　｜　基本：タンク1・ヒーラー1・DPS×3（空き枠に追加配置）",pad,84);
  for(let team=0;team<4;team++){let col=team%2,row=Math.floor(team/2),px=pad+col*(cw+gapX),baseY=rowY[row];
  x.fillStyle="#30384a";x.font="700 21px system-ui,'Noto Sans JP',sans-serif";x.fillText("TEAM "+(team+1),px,baseY);
  teams[team].forEach(({n,role},r0)=>{let py=baseY+header+r0*step,m=n?(mem[n]||{}):{};
